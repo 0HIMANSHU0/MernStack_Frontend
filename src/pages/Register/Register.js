@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState} from "react";
 import "./register.css";
 import Card from "react-bootstrap/Card";
 import Row from "react-bootstrap/Row";
 import Button from "react-bootstrap/Button";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
+import { registerfunc } from "../../services/Apis";
+import {useNavigate} from "react-router-dom";
 import Form from "react-bootstrap/Form";
 import Select from "react-select";
 import Spiner from "../../components/Spiner/Spiner";
+import { addData } from "../../components/context/ContextProvide";
 
 const Register = () => {
   const [inputData, setInputData] = useState({
@@ -24,6 +27,9 @@ const Register = () => {
   const [image, setImage] = useState("");
   const [preview, setPreview] = useState("");
   const [showSpin, setShowSpin] = useState(true);
+
+  const navigate = useNavigate();
+  const {useradd, setUserAdd} = useContext(addData);
 
   // Status Options
   const options = [
@@ -46,7 +52,7 @@ const Register = () => {
   // Set Profile Image
   const setProfile = (e) => {
     setImage(e.target.files[0]);
-    console.log(e.target.files[0]);
+    // console.log(e.target.files[0]);
   };
 
   // Set Preview Image
@@ -60,7 +66,7 @@ const Register = () => {
   }, [image]);
 
   // Submit UserData
-  const submitUserData = (e) => {
+  const submitUserData = async (e) => {
     e.preventDefault();
     const { fname, lname, email, mobile, gender, location } = inputData;
 
@@ -85,7 +91,43 @@ const Register = () => {
     } else if (location === "") {
       toast.error("Location is Required.");
     } else {
-      toast.success("Registration Successfully Done");
+      // console.log(image);
+
+      const data = new FormData();
+      data.append("fname", fname);
+      data.append("lname", lname);
+      data.append("email", email);
+      data.append("mobile", mobile);
+      data.append("gender", gender);
+      data.append("status", status);
+      data.append("user_profile", image);
+      data.append("location", location);
+
+      const config = {
+        "Content-Type": "multipart/form-data",
+      };
+
+      const response = await registerfunc(data, config);
+      // console.log(response);
+      if (response.status === 200) {
+        setInputData({
+          ...inputData,
+          fname: "",
+          lname: "",
+          email: "",
+          mobile: "",
+          gender: "",
+          location: "",
+        });
+        setStatus("");
+        setImage("");
+        setPreview("");
+        setUserAdd(response.data);
+        navigate("/")
+      }
+      else{
+        toast.error("Error!")
+      }
     }
   };
 

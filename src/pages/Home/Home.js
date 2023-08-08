@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./home.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Dropdown from "react-bootstrap/Dropdown";
 import { useNavigate } from "react-router-dom";
+import { addData } from "../../components/context/ContextProvide";
 import Tables from "../../components/Tables/Tables";
 import Spiner from "../../components/Spiner/Spiner";
+import Alert from "react-bootstrap/Alert";
 
 const Home = () => {
   const [showSpin, setShowSpin] = useState(true);
+  const { useradd, setUserAdd } = useContext(addData);
+
   const navigate = useNavigate();
   const addUser = () => {
     navigate("/register");
@@ -20,6 +24,13 @@ const Home = () => {
   }, []);
   return (
     <>
+      {useradd ? (
+        <Alert variant="success" onClose={() => setUserAdd("")} dismissible>
+          {useradd.fname.toUpperCase()} Successfully Added.
+        </Alert>
+      ) : (
+        ""
+      )}
       <div className="container">
         <div className="main_div">
           {/* Search add btn */}
