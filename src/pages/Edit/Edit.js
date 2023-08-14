@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "./edit.css";
+import { useNavigate, useParams } from "react-router-dom";
 import Card from "react-bootstrap/Card";
 import Row from "react-bootstrap/Row";
 import Button from "react-bootstrap/Button";
@@ -8,6 +9,9 @@ import { ToastContainer, toast } from "react-toastify";
 import Form from "react-bootstrap/Form";
 import Select from "react-select";
 import Spiner from "../../components/Spiner/Spiner";
+import { editfunc, singleUsergetfunc } from "../../services/Apis";
+import { BASE_URL } from "../../services/helper";
+import { updateData } from "../../components/context/ContextProvide";
 
 const Edit = () => {
   const [inputData, setInputData] = useState({
@@ -20,10 +24,18 @@ const Edit = () => {
   });
   // console.log(inputData);
 
+  const { id } = useParams();
+
   const [status, setStatus] = useState("Active");
   const [image, setImage] = useState("");
+  const [imgdata, setImgData] = useState("");
   const [preview, setPreview] = useState("");
   const [showSpin, setShowSpin] = useState(true);
+
+  const { update, setUpdate } = useContext(updateData);
+  const navigate = useNavigate();
+
+  // console.log(status)
 
   // Status Options
   const options = [
@@ -46,21 +58,24 @@ const Edit = () => {
   // Set Profile Image
   const setProfile = (e) => {
     setImage(e.target.files[0]);
-    console.log(e.target.files[0]);
+    // console.log(e.target.files[0]);
   };
 
-  // Set Preview Image
-  useEffect(() => {
-    if (image) {
-      setPreview(URL.createObjectURL(image));
+  // console.log(id);
+  const userProfileGet = async () => {
+    const response = await singleUsergetfunc(id);
+    // console.log(response);
+    if (response.status === 200) {
+      setInputData(response.data);
+      setStatus(response.data.status);
+      setImgData(response.data.profile);
+    } else {
+      console.log("Error! by Himanshu LOL");
     }
-    setTimeout(() => {
-      setShowSpin(false);
-    }, 1200);
-  }, [image]);
+  };
 
   // Submit UserData
-  const submitUserData = (e) => {
+  const submitUserData = async (e) => {
     e.preventDefault();
     const { fname, lname, email, mobile, gender, location } = inputData;
 
@@ -79,16 +94,49 @@ const Edit = () => {
     } else if (gender === "") {
       toast.error("Gender is Required.");
     } else if (status === "") {
-      toast.error("Gender is Required.");
-    } else if (image === "") {
-      toast.error("Gender is Required.");
+      toast.error("Status is Required.");
     } else if (location === "") {
       toast.error("Location is Required.");
     } else {
       toast.success("Updation Successfully Done");
+
+      const data = new FormData();
+      data.append("fname", fname);
+      data.append("lname", lname);
+      data.append("email", email);
+      data.append("mobile", mobile);
+      data.append("gender", gender);
+      data.append("status", status);
+      data.append("user_profile", image || imgdata);
+      data.append("location", location);
+
+      const config = {
+        "Content-Type": "multipart/form-data",
+      };
+
+      const response = await editfunc(id, data, config);
+      // console.log(response);
+      if (response.status === 200) {
+        setUpdate(response.data);
+        navigate("/");
+      }
     }
   };
 
+  useEffect(() => {
+    userProfileGet();
+  }, [id]);
+
+  // Set Preview Image
+  useEffect(() => {
+    if (image) {
+      setImgData("");
+      setPreview(URL.createObjectURL(image));
+    }
+    setTimeout(() => {
+      setShowSpin(false);
+    }, 1200);
+  }, [image]);
 
   return (
     <>
@@ -99,7 +147,10 @@ const Edit = () => {
           <h2 className="text-center mt-7">Update Your Profile</h2>
           <Card className="shadow mt-3 p-3">
             <div className="profile_div text-center">
-              <img src={preview ? preview : "/man.png"} alt="img" />
+              <img
+                src={image ? preview : `${BASE_URL}/uploads/${imgdata}`}
+                alt="img"
+              />
             </div>
             <Form>
               <Row>
@@ -165,6 +216,7 @@ const Edit = () => {
                     label={"Male"}
                     name="gender"
                     value={"Male"}
+                    checked={inputData.gender === "Male" ? true : false}
                     onChange={setInputValue}
                   />
                   <Form.Check
@@ -172,6 +224,7 @@ const Edit = () => {
                     label={"Female"}
                     name="gender"
                     value={"Female"}
+                    checked={inputData.gender === "Female" ? true : false}
                     onChange={setInputValue}
                   />
                 </Form.Group>
@@ -182,7 +235,7 @@ const Edit = () => {
                   <Form.Label>Select Your Status</Form.Label>
                   <Select
                     options={options}
-                    value={status}
+                    defaultValue={status}
                     onChange={setStatusValue}
                   />
                 </Form.Group>

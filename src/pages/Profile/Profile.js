@@ -1,35 +1,93 @@
-import React from 'react';
-import "./profile.css"
-import Card from "react-bootstrap/Card"
-import Row from "react-bootstrap/Row"
+import React, { useState, useEffect } from "react";
+import "./profile.css";
+import Card from "react-bootstrap/Card";
+import Row from "react-bootstrap/Row";
+import Spiner from "../../components/Spiner/Spiner";
+import { singleUsergetfunc } from "../../services/Apis";
+import { useParams } from "react-router-dom";
+import { BASE_URL } from "../../services/helper";
+import moment from "moment";
 
 const Profile = () => {
-  return (
-    <div className="container"> 
-    <Card className="card-profile shadow col-lg-6 mx-auto mt-5">
-<Card.Body>
-  <Row>
-    <div className="col">
-      <div className="card-profile-stats d-flex justify-content-center">
-<img src="/man.png" alt="img" />
-      </div>
-    </div>
-  </Row>
-  <div className="text-center">
-    <h3>Himanshu</h3>
-    <h4><i class="fa-solid fa-envelope email"></i>&nbsp; :- <span>himanshusaini@gmail.com</span></h4>
-    <h5><i class="fa-solid fa-mobile"></i>&nbsp; :- <span>9876543210</span></h5>
-    <h4><i class="fa-solid fa-person"></i>&nbsp; :- <span>Male</span></h4>
-    
-    <h4><i class="fa-solid fa-location-dot location"></i>&nbsp; :- <span>Haryana</span></h4>
-    <h4>Status&nbsp; :- <span>Active</span></h4>
-    <h4><i class="fa-solid fa-calendar-days" style={{color: "#a30515"}}></i>&nbsp; Date Created&nbsp; :- <span>Active</span></h4>
-    <h4><i class="fa-solid fa-calendar-days" style={{color: "#a30515"}}></i>&nbsp; Date Updated&nbsp; :- <span>Active</span></h4>
-  </div>
-</Card.Body>
-    </Card>
-    </div>
-  )
-}
+  const [userprofile, setUserProfile] = useState({});
+  const [showSpin, setShowSpin] = useState(true);
 
-export default Profile
+  const {id} = useParams();
+  // console.log(id);
+  const userProfileGet = async()=>{
+    const response = await singleUsergetfunc(id);
+    // console.log(response); 
+    if(response.status === 200){
+      setUserProfile(response.data);
+    }
+    else{
+      console.log("Error! by Himanshu LOL")
+    }
+  }
+
+  useEffect(() => {
+    userProfileGet();
+    setTimeout(() => {
+      setShowSpin(false);
+    }, 1200);
+  }, [id]);
+  return (
+    <>
+      {showSpin ? (
+        <Spiner />
+      ) : (
+        <div className="container">
+          <Card className="card-profile shadow col-lg-6 mx-auto mt-5">
+            <Card.Body>
+              <Row>
+                <div className="col">
+                  <div className="card-profile-stats d-flex justify-content-center">
+                    <img src={`${BASE_URL}/uploads/${userprofile.profile}`} alt="img" />
+                  </div>
+                </div>
+              </Row>
+              <div className="text-center">
+                <h3>{userprofile.fname +  " " + userprofile.lname}</h3>
+                <h4>
+                  <i class="fa-solid fa-envelope email"></i>&nbsp; :-{" "}
+                  <span>{userprofile.email}</span>
+                </h4>
+                <h5>
+                  <i class="fa-solid fa-mobile"></i>&nbsp; :-{" "}
+                  <span>{userprofile.mobile}</span>
+                </h5>
+                <h4>
+                  <i class="fa-solid fa-person"></i>&nbsp; :- <span>{userprofile.gender}</span>
+                </h4>
+
+                <h4>
+                  <i class="fa-solid fa-location-dot location"></i>&nbsp; :-{" "}
+                  <span>{userprofile.location}</span>
+                </h4>
+                <h4>
+                  Status&nbsp; :- <span>{userprofile.status}</span>
+                </h4>
+                <h4>
+                  <i
+                    class="fa-solid fa-calendar-days"
+                    style={{ color: "#a30515" }}
+                  ></i>
+                  &nbsp; Date Created&nbsp; :- <span>{moment(userprofile.datecreated).format("DD-MM-YYYY")}</span>
+                </h4>
+                <h4>
+                  <i
+                    class="fa-solid fa-calendar-days"
+                    style={{ color: "#a30515" }}
+                  ></i>
+                  &nbsp; Date Updated&nbsp; :- <span>{userprofile.dateUpdated}</span>
+                </h4>
+              </div>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Profile;
